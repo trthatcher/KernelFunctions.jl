@@ -1,7 +1,7 @@
 immutable Interval{T<:Real,A<:Bound,B<:Bound}
     a::A
     b::B
-    function Interval(a::Bound{T}, b::Bound{T})
+    function Interval{T,A,B}(a::Bound{T}, b::Bound{T}) where {T,A,B}
         if !(A <: NullBound || B <: NullBound)
             va = a.value
             vb = b.value
@@ -31,7 +31,7 @@ function theta{T<:AbstractFloat,A,B}(I::Interval{T,A,B}, x::T)
     if A <: OpenBound
         return B <: OpenBound ? log(x-I.a.value) - log(I.b.value-x) : log(x-I.a.value)
     else
-        return B <: OpenBound ? log(I.b.value-x) : x 
+        return B <: OpenBound ? log(I.b.value-x) : x
     end
 end
 
@@ -62,7 +62,7 @@ function eta{T<:AbstractFloat,A,B}(I::Interval{T,A,B}, x::T)
             return exp(x) + I.a.value
         end
     else
-        return B <: OpenBound ? I.b.value - exp(x) : x 
+        return B <: OpenBound ? I.b.value - exp(x) : x
     end
 end
 

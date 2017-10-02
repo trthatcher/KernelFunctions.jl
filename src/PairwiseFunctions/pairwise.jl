@@ -2,7 +2,7 @@
   Metrics - Consume two vectors
 ===================================================================================================#
 
-abstract PairwiseFunction
+abstract type PairwiseFunction end
 
 @inline pairwise_initiate{T}(::PairwiseFunction, ::Type{T}) = zero(T)
 @inline pairwise_return{T}(::PairwiseFunction, s::T) = s
@@ -12,7 +12,7 @@ abstract PairwiseFunction
 
 
 
-abstract InnerProduct <: PairwiseFunction
+abstract type InnerProduct <: PairwiseFunction end
 
 doc"ScalarProduct() = xᵀy"
 immutable ScalarProduct <: InnerProduct end
@@ -20,7 +20,7 @@ immutable ScalarProduct <: InnerProduct end
 
 
 
-abstract PreMetric <: PairwiseFunction
+abstract type PreMetric <: PairwiseFunction end
 
 doc"ChiSquared() = Σⱼ(xⱼ-yⱼ)²/(xⱼ+yⱼ)"
 immutable ChiSquared <: PreMetric end
@@ -34,7 +34,7 @@ immutable SineSquared <: PreMetric end
 @inline isstationary(f::SineSquared) = true
 
 
-abstract Metric <: PreMetric
+abstract type Metric <: PreMetric end
 
 doc"SquaredEuclidean() = (x-y)ᵀ(x-y)"
 immutable SquaredEuclidean <: PreMetric end

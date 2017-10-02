@@ -1,10 +1,10 @@
-abstract Bound{T}
+abstract type Bound{T} end
 
 eltype{T}(::Bound{T}) = T
 
 immutable OpenBound{T<:Real} <: Bound{T}
     value::T
-    function OpenBound(x::Real)
+    function OpenBound{T}(x::Real) where T
         !(T <: Integer) || error("Bounds must be closed for integers")
         if T <: AbstractFloat
             !isnan(x) || error("Bound value must not be NaN")
@@ -22,7 +22,7 @@ string(b::OpenBound) = string("OpenBound(", b.value, ")")
 
 immutable ClosedBound{T<:Real} <: Bound{T}
     value::T
-    function ClosedBound(x::Real)
+    function ClosedBound{T}(x::Real) where T
         if T <: AbstractFloat
             !isnan(x) || error("Bound value must not be NaN")
             !isinf(x) || error("Bound value must not be Inf/-Inf")
