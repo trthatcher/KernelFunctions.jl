@@ -2,7 +2,7 @@
   Kernels
 ===================================================================================================#
 
-abstract Kernel{T<:AbstractFloat}
+abstract type Kernel{T<:AbstractFloat} end
 
 function string(κ::Kernel)
     args = [string(getvalue(getfield(κ,θ))) for θ in fieldnames(κ)]
@@ -72,9 +72,9 @@ doc"SigmoidKernel(a,c) = tanh(a⋅xᵀy + c)   a ∈ (0,∞), c ∈ (0,∞)"
 immutable SigmoidKernel{T<:AbstractFloat} <: Kernel{T}
     a::HyperParameter{T}
     c::HyperParameter{T}
-    SigmoidKernel(a::Real, c::Real) = new(
+    SigmoidKernel{T}(a::Real, c::Real) where T = new(
         HyperParameter(convert(T,a), interval(OpenBound(zero(T)),   nothing)),
-        HyperParameter(convert(T,c), interval(ClosedBound(zero(T)), nothing))   
+        HyperParameter(convert(T,c), interval(ClosedBound(zero(T)), nothing))
     )
 end
 function SigmoidKernel{T1<:Real,T2<:Real}(a::T1 = 1.0, c::T2 = one(T1))
@@ -92,7 +92,7 @@ end
   Mercer Kernels
 ================================================#
 
-abstract MercerKernel{T} <: Kernel{T}
+abstract type MercerKernel{T} <: Kernel{T} end
 ismercer(κ::MercerKernel) = true
 
 
@@ -100,7 +100,7 @@ ismercer(κ::MercerKernel) = true
 doc"ExponentialKernel(α) = exp(-α⋅‖x-y‖)   α ∈ (0,∞)"
 immutable ExponentialKernel{T<:AbstractFloat} <: MercerKernel{T}
     alpha::HyperParameter{T}
-    function ExponentialKernel(α::Real)
+    function ExponentialKernel{T}(α::Real) where T
         new(HyperParameter(convert(T,α), interval(OpenBound(zero(T)), nothing)))
     end
 end
@@ -119,7 +119,7 @@ end
 doc"SquaredExponentialKernel(α) = exp(-α⋅‖x-y‖²)   α ∈ (0,∞)"
 immutable SquaredExponentialKernel{T<:AbstractFloat} <: MercerKernel{T}
     alpha::HyperParameter{T}
-    SquaredExponentialKernel(α::Real) = new(
+    SquaredExponentialKernel{T}(α::Real) where T = new(
         HyperParameter(convert(T,α), interval(OpenBound(zero(T)), nothing))
     )
 end
@@ -140,7 +140,7 @@ doc"GammaExponentialKernel(α,γ) = exp(-α⋅‖x-y‖ᵞ)   α ∈ (0,∞), γ
 immutable GammaExponentialKernel{T<:AbstractFloat} <: MercerKernel{T}
     alpha::HyperParameter{T}
     gamma::HyperParameter{T}
-    GammaExponentialKernel(α::Real, γ::Real) = new(
+    GammaExponentialKernel{T}(α::Real, γ::Real) where T = new(
         HyperParameter(convert(T,α), interval(OpenBound(zero(T)), nothing)),
         HyperParameter(convert(T,γ), interval(OpenBound(zero(T)), ClosedBound(one(T))))
     )
@@ -162,7 +162,7 @@ doc"RationalQuadraticKernel(α,β) = (1 + α⋅‖x-y‖²)⁻ᵝ   α ∈ (0,�
 immutable RationalQuadraticKernel{T<:AbstractFloat} <: MercerKernel{T}
     alpha::HyperParameter{T}
     beta::HyperParameter{T}
-    RationalQuadraticKernel(α::Real, β::Real) = new(
+    RationalQuadraticKernel{T}(α::Real, β::Real) where T = new(
         HyperParameter(convert(T,α), interval(OpenBound(zero(T)), nothing)),
         HyperParameter(convert(T,β), interval(OpenBound(zero(T)), nothing))
     )
@@ -185,7 +185,7 @@ immutable GammaRationalKernel{T<:AbstractFloat} <: MercerKernel{T}
     alpha::HyperParameter{T}
     beta::HyperParameter{T}
     gamma::HyperParameter{T}
-    GammaRationalKernel(α::Real, β::Real, γ::Real) = new(
+    GammaRationalKernel{T}(α::Real, β::Real, γ::Real) where T = new(
         HyperParameter(convert(T,α), interval(OpenBound(zero(T)), nothing)),
         HyperParameter(convert(T,β), interval(OpenBound(zero(T)), nothing)),
         HyperParameter(convert(T,γ), interval(OpenBound(zero(T)), ClosedBound(one(T))))
@@ -212,7 +212,7 @@ doc"MaternKernel(ν,ρ) = 2ᵛ⁻¹(√(2ν)‖x-y‖²/θ)ᵛKᵥ(√(2ν)‖x-
 immutable MaternKernel{T<:AbstractFloat} <: MercerKernel{T}
     nu::HyperParameter{T}
     rho::HyperParameter{T}
-    MaternKernel(ν::Real, ρ::Real) = new(
+    MaternKernel{T}(ν::Real, ρ::Real) where T = new(
         HyperParameter(convert(T,ν), interval(OpenBound(zero(T)), nothing)),
         HyperParameter(convert(T,ρ), interval(OpenBound(zero(T)), nothing))
     )
@@ -236,7 +236,7 @@ doc"LinearKernel(a,c) = a⋅xᵀy + c   a ∈ (0,∞), c ∈ [0,∞)"
 immutable LinearKernel{T<:AbstractFloat} <: MercerKernel{T}
     a::HyperParameter{T}
     c::HyperParameter{T}
-    LinearKernel(a::Real, c::Real) = new(
+    LinearKernel{T}(a::Real, c::Real) where T = new(
         HyperParameter(convert(T,a), interval(OpenBound(zero(T)), nothing)),
         HyperParameter(convert(T,c), interval(ClosedBound(zero(T)), nothing))
     )
@@ -255,7 +255,7 @@ immutable PolynomialKernel{T<:AbstractFloat,U<:Integer} <: MercerKernel{T}
     a::HyperParameter{T}
     c::HyperParameter{T}
     d::HyperParameter{U}
-    PolynomialKernel(a::Real, c::Real, d::Integer) = new(
+    PolynomialKernel{T,U}(a::Real, c::Real, d::Integer) where {T,U} = new(
         HyperParameter(convert(T,a), interval(OpenBound(zero(T)), nothing)),
         HyperParameter(convert(T,c), interval(ClosedBound(zero(T)), nothing)),
         HyperParameter(convert(U,d), interval(ClosedBound(one(U)), nothing))
@@ -279,7 +279,7 @@ end
 doc"ExponentiatedKernel(α) = exp(α⋅xᵀy)   α ∈ (0,∞)"
 immutable ExponentiatedKernel{T<:AbstractFloat} <: MercerKernel{T}
     alpha::HyperParameter{T}
-    ExponentiatedKernel(α::Real) = new(
+    ExponentiatedKernel{T}(α::Real) where T = new(
         HyperParameter(convert(T,α), interval(OpenBound(zero(T)), nothing))
     )
 end
@@ -295,7 +295,7 @@ ExponentiatedKernel{T1<:Real}(α::T1 = 1.0) = ExponentiatedKernel{floattype(T1)}
 doc"PeriodicKernel(α,p) = exp(-α⋅Σⱼsin²(xⱼ-yⱼ))"
 immutable PeriodicKernel{T<:AbstractFloat} <: MercerKernel{T}
     alpha::HyperParameter{T}
-    PeriodicKernel(α::Real) = new(
+    PeriodicKernel{T}(α::Real) where T = new(
         HyperParameter(convert(T,α), interval(OpenBound(zero(T)), nothing))
     )
 end
@@ -310,7 +310,7 @@ PeriodicKernel{T1<:Real}(α::T1 = 1.0) = PeriodicKernel{floattype(T1)}(α)
   Negative Definite Kernels
 ================================================#
 
-abstract NegativeDefiniteKernel{T} <: Kernel{T}
+abstract type NegativeDefiniteKernel{T} <: Kernel{T} end
 isnegdef(::NegativeDefiniteKernel) = true
 
 
@@ -318,7 +318,7 @@ isnegdef(::NegativeDefiniteKernel) = true
 doc"PowerKernel(a,c,γ) = ‖x-y‖²ᵞ   γ ∈ (0,1]"
 immutable PowerKernel{T<:AbstractFloat} <: NegativeDefiniteKernel{T}
     gamma::HyperParameter{T}
-    PowerKernel(γ::Real) = new(
+    PowerKernel{T}(γ::Real) where T = new(
         HyperParameter(convert(T,γ), interval(OpenBound(zero(T)), ClosedBound(one(T))))
     )
 end
@@ -335,7 +335,7 @@ doc"LogKernel(α,γ) = log(1 + α⋅‖x-y‖²ᵞ)   α ∈ (0,∞), γ ∈ (0,
 immutable LogKernel{T<:AbstractFloat} <: NegativeDefiniteKernel{T}
     alpha::HyperParameter{T}
     gamma::HyperParameter{T}
-    LogKernel(α::Real, γ::Real) = new(
+    LogKernel{T}(α::Real, γ::Real) where T = new(
         HyperParameter(convert(T,α), interval(OpenBound(zero(T)), nothing)),
         HyperParameter(convert(T,γ), interval(OpenBound(zero(T)), ClosedBound(one(T))))
     )
@@ -350,22 +350,23 @@ LogKernel{T1,T2}(α::T1 = 1.0, γ::T2 = one(T1)) = LogKernel{floattype(T1,T2)}(�
 end
 
 
+kernel_list = (
+    ExponentialKernel,
+    SquaredExponentialKernel,
+    GammaExponentialKernel,
+    RationalQuadraticKernel,
+    GammaRationalKernel,
+    MaternKernel,
+    LinearKernel,
+    PolynomialKernel,
+    ExponentiatedKernel,
+    PeriodicKernel,
+    PowerKernel,
+    LogKernel,
+    SigmoidKernel
+)
 
-for κ in (
-        ExponentialKernel,
-        SquaredExponentialKernel,
-        GammaExponentialKernel,
-        RationalQuadraticKernel,
-        GammaRationalKernel,
-        MaternKernel,
-        LinearKernel,
-        PolynomialKernel,
-        ExponentiatedKernel,
-        PeriodicKernel,
-        PowerKernel,
-        LogKernel,
-        SigmoidKernel
-    )
+for κ in kernel_list
     kernel_sym = κ.name.name
 
     @eval begin

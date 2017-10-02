@@ -31,7 +31,7 @@ export
     pairwisematrix!
 
 
-abstract MemoryLayout
+abstract type MemoryLayout end
 
 immutable ColumnMajor <: MemoryLayout end
 immutable RowMajor    <: MemoryLayout end
@@ -39,5 +39,5 @@ immutable RowMajor    <: MemoryLayout end
 include("common.jl")
 include("pairwise.jl")
 include("pairwisematrix.jl")
-    
+
 end # MLKernels

@@ -4,8 +4,7 @@
 
 module MLKernels
 
-import Base: call, convert, eltype, print, show, string, ==, *, /, +, -, ^, besselk, exp, gamma, 
-             tanh
+import Base: convert, eltype, print, show, string, ==, *, /, +, -, ^, besselk, exp, gamma, tanh
 
 export
 
@@ -52,7 +51,7 @@ export
 
     # Kernel Function Type
     Kernel,
-        MercerKernel, 
+        MercerKernel,
             ExponentialKernel,
                 LaplacianKernel,
             SquaredExponentialKernel,
@@ -85,7 +84,7 @@ export
     nystrom
 
 include("HyperParameters/HyperParameters.jl")
-using MLKernels.HyperParameters: 
+using MLKernels.HyperParameters:
     Bound,
         OpenBound,
         ClosedBound,
@@ -134,5 +133,5 @@ import MLKernels.PairwiseFunctions: isstationary, isisotropic
 include("kernel.jl")
 include("kernelmatrix.jl")
 include("kernelmatrixapproximation.jl")
-    
+
 end # MLKernels
