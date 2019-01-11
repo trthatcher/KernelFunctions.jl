@@ -1,5 +1,5 @@
 # Abstract Rational-Quadratic Kernel =======================================================
-abstract type AbstractRationalQuadraticKernel{T<:Real <: MercerKernel{T} end
+abstract type AbstractRationalQuadraticKernel{T<:Real} <: MercerKernel{T} end
 
 @inline basefunction(::AbstractRationalQuadraticKernel) = SquaredEuclidean()
 
@@ -30,7 +30,7 @@ julia> RationalQuadraticKernel(2.0f0, 2.0)
 RationalQuadraticKernel{Float64}(2.0,2.0)
 ```
 """
-struct RationalQuadraticKernel{T<:Real} <: AbstractRationalQuadraticKernel{T}
+struct RationalQuadraticKernel{T<:Real,A} <: AbstractRationalQuadraticKernel{T}
     α::A
     β::T
     function RationalQuadraticKernel{T}(
@@ -43,7 +43,7 @@ struct RationalQuadraticKernel{T<:Real} <: AbstractRationalQuadraticKernel{T}
     end
 end
 function RationalQuadraticKernel(
-        α::T₁=1.0,
+        α::Union{T₁,AbstractVector{T₁}}=1.0,
         β::T₂=T₁(1)
     ) where {T₁<:Real, T₂<:Real}
     RationalQuadraticKernel{promote_float(T₁, T₂)}(α, β)

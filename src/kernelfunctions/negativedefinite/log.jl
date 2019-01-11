@@ -30,7 +30,7 @@ struct LogKernel{T<:Real,A} <: NegativeDefiniteKernel{T}
         return new{T,typeof(α)}(α.^(-γ), γ)
     end
 end
-function LogKernel(α::T₁=1.0, γ::T₂=T₁(1)) where {T₁<:Real,T₂<:Real}
+function LogKernel(α::Union{T₁,AbstractVector{T₁}}=1.0, γ::T₂=T₁(1)) where {T₁<:Real,T₂<:Real}
     LogKernel{promote_float(T₁,T₂)}(α, γ)
 end
 

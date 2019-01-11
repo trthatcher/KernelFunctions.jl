@@ -32,12 +32,12 @@ struct PolynomialKernel{T<:Real,A} <: MercerKernel{T}
         @check_args(PolynomialKernel, a, count(a .<=  zero(T)) == 0, "a > 0")
         @check_args(PolynomialKernel, c, c >= zero(T), "c ≧ 0")
         @check_args(PolynomialKernel, d, d >= one(T) && d == trunc(d), "d ∈ ℤ₊")
-        return new{T}(a, c, d)
+        return new{T,typeof{a}}(a, c, d)
     end
 end
 
 function PolynomialKernel(
-        a::T₁=1.0,
+        a::Union{T₁,AbstractVector{T₁}}=1.0,
         c::T₂=T₁(1),
         d::T₃=convert(promote_float(T₁,T₂), 3)
     ) where {T₁<:Real,T₂<:Real,T₃<:Real}

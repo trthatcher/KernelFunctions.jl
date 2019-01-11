@@ -3,9 +3,14 @@
 @inline base_initiate(::BaseFunction, ::Type{T}) where {T} = zero(T)
 @inline base_return(::BaseFunction, s::T) where {T} = s
 
-function base_evaluate(f::BaseFunction, x::T, y::T) where {T<:Real}
-    base_return(f, base_aggregate(f, base_initiate(f,T), x, y))
+function base_evaluate(f::BaseFunction, scale::T, x::T, y::T) where {T<:Real}
+    base_return(f, base_aggregate(f, base_initiate(f,T), scale, x, y))
 end
+
+function base_evaluate(f::BaseFunction, scale::AbstractVector{T}, x::T, y::T) where {T<:Real}
+    base_return(f, base_aggregate(f, base_initiate(f,T), scale[1], x, y))
+end
+
 
 # Note: no checks, assumes length(x) == length(y) >= 1
 function unsafe_base_evaluate(
@@ -45,8 +50,10 @@ function base_evaluate(
         x::AbstractArray{T},
         y::AbstractArray{T}
     ) where {T<:Real}
-    if (n = length(x)) != length(y) || n != length(scale)
+    if (n = length(x)) != length(y)
         throw(DimensionMismatch("Arrays x and y must have the same length."))
+    elseif n != length(scale)
+        throw(DimensionMismatch("Arrays x and y must have the same length as the scaling vector of the kernel"))
     elseif n == 0
         throw(DimensionMismatch("Arrays x and y must be at least of length 1."))
     end

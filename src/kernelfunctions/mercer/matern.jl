@@ -26,9 +26,8 @@ struct MaternKernel{T<:Real,A} <: MercerKernel{T}
         return new{T,typeof(ρ)}(ν, 1.0./ρ.^2)
     end
 end
-# function MaternKernel(ν::T₁=1.0, ρ::T₂=T₁(1)) where {T₁<:Real,T₂<:Real}
-#     MaternKernel{promote_float(T₁,T₂)}(ν,ρ)
-# end
+
+MaternKernel(ν::Union{T₁,AbstractVector{T₁}}=1.0, ρ::T₂=T₁(1)) where {T₁<:Real,T₂<:Real} = MaternKernel{promote_float(T₁,T₂)}(ν,ρ)
 
 @inline basefunction(::MaternKernel) = SquaredEuclidean()
 

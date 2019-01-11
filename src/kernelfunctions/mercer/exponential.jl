@@ -1,4 +1,4 @@
-Real# Abstract Exponential Kernel ==============================================================
+# Abstract Exponential Kernel ==============================================================
 
 abstract type AbstractExponentialKernel{T<:Real} <: MercerKernel{T} end
 
@@ -35,6 +35,8 @@ struct ExponentialKernel{T<:Real,A} <: AbstractExponentialKernel{T}
         return new{T,typeof(α)}(α.^2)
     end
 end
+
+ExponentialKernel(α::Union{T,AbstractVector{T}}=1.0) where {T<:Real} = ExponentialKernel{promote_float(T)}(α)
 
 @inline kappa(κ::ExponentialKernel{T}, d²::T) where {T} = exp(-√(d²))
 
@@ -75,15 +77,13 @@ SquaredExponentialKernel{Float32}(2.0)
 """
 struct SquaredExponentialKernel{T<:Real,A} <: AbstractExponentialKernel{T}
     α::A
-    function SquaredExponentialKernel{T}(α::Union{T,AbstractVector{T}}=1.0) where {T<:Real}
+    function SquaredExponentialKernel{T}(α::Union{T,AbstractVector{T}}=T(1)) where {T<:Real}
         @check_args(SquaredExponentialKernel, α, count(α .<= zero(T))==0, "α > 0")
         return new{T,typeof(α)}(α)
     end
-    function SquaredExponentialKernel{T}(α::T=one(T)) where {T<:Real}
-        @check_args(SquaredExponentialKernel, α, α > zero(T), "α > 0")
-        return new{T,T}(α)
-    end
 end
+
+SquaredExponentialKernel(α::Union{T,AbstractVector{T}}=1.0) where {T<:Real} = SquaredExponentialKernel{promote_float{T}}(α)
 
 @inline kappa(κ::SquaredExponentialKernel{T}, d²::T) where {T} = exp(-d²)
 
@@ -119,7 +119,7 @@ The ``\gamma``-exponential kernel is an isotropic Mercer kernel given by the for
     κ(x,y) = exp(α‖x-y‖²ᵞ)   α > 0, γ ∈ (0,1]
 ```
 where `α` is a scaling parameter and `γ` is a shape parameter of the Euclidean distance.
-When `γ = 1` use [`SquaredExponentialKernel`](@ref) and [`SquaredExponentialKernel`](@ref)
+When `γ = 1` use [`SquaredExponentialKernel`](@ref) and [`ExponentialKernel`](@ref)
 when `γ = 0.5` since these are more efficient implementations.
 
 # Examples
@@ -141,8 +141,12 @@ struct GammaExponentialKernel{T<:Real,A} <: AbstractExponentialKernel{T}
     function GammaExponentialKernel{T}(α::Union{T,AbstractVector{T}}=T(1), γ::T=T(1)) where {T<:Real}
         @check_args(GammaExponentialKernel, α, count(α .<= zero(T))==0, "α > 0")
         @check_args(GammaExponentialKernel, γ, one(T) >= γ > zero(T), "γ ∈ (0,1]")
-        return new{T,typeof(α)}(α.^{-γ}, γ)
+        return new{T,typeof(α)}(α.^(-γ), γ)
     end
+end
+
+function GammaExponentialKernel(α::Union{T₁,AbstractVector{T₁}}=1.0, γ::T₂=T₁(1)) where {T₁<:Real, T₂<:Real}
+    return GammaExponentialKernel{promote_float(T₁,T₂)}(α, γ)
 end
 
 @inline kappa(κ::GammaExponentialKernel{T}, d²::T) where {T} = exp(-d²^κ.γ)

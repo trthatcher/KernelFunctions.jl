@@ -21,10 +21,10 @@ function test_base_function(f)
     # Test that aggregation works correctly
     @testset "Testing $(MLK.base_aggregate)" begin
         for T in FloatingPointTypes
-            f_tmp = get(base_functions_aggregate, f, (s,x,y) -> convert(T, NaN))
-            for x in (T(0), T(1), T(2)), y in (T(0), T(1), T(2))
-                s = MLK.base_aggregate(F, T(1), x, y)
-                s_tmp = f_tmp(T(1), x, y)
+            f_tmp = get(base_functions_aggregate, f, (s,scale,x,y) -> convert(T, NaN))
+            for x in (T(0), T(1), T(2)), y in (T(0), T(1), T(2)), scale in (T(1), T(2))
+                s = MLK.base_aggregate(F, T(1), scale, x, y)
+                s_tmp = f_tmp(T(1), scale, x, y)
 
                 @test typeof(s) == T
                 @test s == s_tmp

@@ -28,7 +28,7 @@ struct ExponentiatedKernel{T<:Real,A} <: MercerKernel{T}
         return new{T,typeof(α)}(α)
     end
 end
-ExponentiatedKernel(α::T=1.0) where {T<:Real} = ExponentiatedKernel{T}(α)
+ExponentiatedKernel(α::Union{T,AbstractVector{T}}=1.0) where {T<:Real} = ExponentiatedKernel{T}(α)
 
 @inline basefunction(::ExponentiatedKernel) = ScalarProduct()
 
