@@ -19,13 +19,13 @@ julia> SigmoidKernel(0.5f0, 0.5)
 SigmoidKernel{Float64}(0.5,0.5)
 ```
 """
-struct SigmoidKernel{T<:AbstractFloat} <: Kernel{T}
-    a::T
+struct SigmoidKernel{T<:Real,A} <: Kernel{T}
+    a::A
     c::T
-    function SigmoidKernel{T}(a::Real=T(1), c::Real=T(1)) where {T<:AbstractFloat}
-        @check_args(SigmoidKernel, a, a >  zero(T), "a > 0")
+    function SigmoidKernel{T}(a::Union{T,AbstractVector{T}}=T(1), c::T=T(1)) where {T<:Real}
+        @check_args(SigmoidKernel, a, count(a .<=  zero(T))==0, "a > 0")
         @check_args(SigmoidKernel, c, c >= zero(T), "c ≧ 0")
-        return new{T}(a, c)
+        return new{T,typeof(a)}(a, c)
     end
 end
 function SigmoidKernel(a::T₁=1.0, c::T₂=T₁(1)) where {T₁<:Real,T₂<:Real}
@@ -34,7 +34,7 @@ end
 
 @inline basefunction(::SigmoidKernel) = ScalarProduct()
 
-@inline kappa(κ::SigmoidKernel{T}, xᵀy::T) where {T} = tanh(κ.a*xᵀy + κ.c)
+@inline kappa(κ::SigmoidKernel{T}, xᵀy::T) where {T} = tanh(xᵀy + κ.c)
 
 function convert(::Type{K}, κ::SigmoidKernel) where {K>:SigmoidKernel{T}} where T
     return SigmoidKernel{T}(κ.a, κ.c)

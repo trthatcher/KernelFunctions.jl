@@ -1,6 +1,6 @@
 # Kernel Functions =========================================================================
 
-abstract type Kernel{T<:AbstractFloat} end
+abstract type Kernel{T<:Real} end
 
 function string(κ::Kernel{T}) where {T}
     args = [string(getfield(κ,θ)) for θ in fieldnames(typeof(κ))]
@@ -46,7 +46,7 @@ isisotropic(κ::Kernel)  = isisotropic(basefunction(κ))
 
 # Mercer Kernels ===========================================================================
 
-abstract type MercerKernel{T<:AbstractFloat} <: Kernel{T} end
+abstract type MercerKernel{T<:Real} <: Kernel{T} end
 
 @inline ismercer(::MercerKernel) = true
 
@@ -65,7 +65,7 @@ end
 
 # Negative Definite Kernels ================================================================
 
-abstract type NegativeDefiniteKernel{T<:AbstractFloat} <: Kernel{T} end
+abstract type NegativeDefiniteKernel{T<:Real} <: Kernel{T} end
 
 @inline isnegdef(::NegativeDefiniteKernel) = true
 

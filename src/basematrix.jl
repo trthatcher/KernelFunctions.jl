@@ -3,36 +3,68 @@
 @inline base_initiate(::BaseFunction, ::Type{T}) where {T} = zero(T)
 @inline base_return(::BaseFunction, s::T) where {T} = s
 
-function base_evaluate(f::BaseFunction, x::T, y::T) where {T<:AbstractFloat}
+function base_evaluate(f::BaseFunction, x::T, y::T) where {T<:Real}
     base_return(f, base_aggregate(f, base_initiate(f,T), x, y))
 end
 
 # Note: no checks, assumes length(x) == length(y) >= 1
 function unsafe_base_evaluate(
         f::BaseFunction,
+        scale::AbstractArray{T},
         x::AbstractArray{T},
-        y::AbstractArray{T}
-    ) where {T<:AbstractFloat}
+        y::AbstractArray{T},
+    ) where {T<:Real}
     s = base_initiate(f, T)
     @simd for I in eachindex(x, y)
         @inbounds xi = x[I]
         @inbounds yi = y[I]
-        s = base_aggregate(f, s, xi, yi)
+        @inbounds si = scale[I]
+        s = base_aggregate(f, s, si, xi, yi)
+    end
+    base_return(f, s)
+end
+
+function unsafe_base_evaluate(
+        f::BaseFunction,
+        scale::T,
+        x::AbstractArray{T},
+        y::AbstractArray{T},
+    ) where {T<:Real}
+    s = base_initiate(f, T)
+    @simd for I in eachindex(x, y)
+        @inbounds xi = x[I]
+        @inbounds yi = y[I]
+        s = base_aggregate(f, s, scale, xi, yi)
     end
     base_return(f, s)
 end
 
 function base_evaluate(
         f::BaseFunction,
+        scale::AbstractArray{T},
         x::AbstractArray{T},
         y::AbstractArray{T}
-    ) where {T<:AbstractFloat}
-    if (n = length(x)) != length(y)
+    ) where {T<:Real}
+    if (n = length(x)) != length(y) || n != length(scale)
         throw(DimensionMismatch("Arrays x and y must have the same length."))
     elseif n == 0
         throw(DimensionMismatch("Arrays x and y must be at least of length 1."))
     end
-    unsafe_base_evaluate(f, x, y)
+    unsafe_base_evaluate(f, scale, x, y)
+end
+
+function base_evaluate(
+        f::BaseFunction,
+        scale::T,
+        x::AbstractArray{T},
+        y::AbstractArray{T}
+    ) where {T<:Real}
+    if (n = length(x)) != length(y) || n != length(scale)
+        throw(DimensionMismatch("Arrays x and y must have the same length."))
+    elseif n == 0
+        throw(DimensionMismatch("Arrays x and y must be at least of length 1."))
+    end
+    unsafe_base_evaluate(f, scale, x, y)
 end
 
 
@@ -57,7 +89,7 @@ for orientation in (:row, :col)
         @inline function allocate_basematrix(
                 ::Val{$(Meta.quot(orientation))},
                 X::AbstractMatrix{T}
-            ) where {T<:AbstractFloat}
+            ) where {T<:Real}
             Array{T}(undef, size(X,$dim_obs), size(X,$dim_obs))
         end
 
@@ -65,7 +97,7 @@ for orientation in (:row, :col)
                 ::Val{$(Meta.quot(orientation))},
                 X::AbstractMatrix{T},
                 Y::AbstractMatrix{T}
-            ) where {T<:AbstractFloat}
+            ) where {T<:Real}
             Array{T}(undef, size(X,$dim_obs), size(Y,$dim_obs))
         end
 
@@ -112,15 +144,16 @@ function basematrix!(
         σ::Orientation,
         P::Matrix{T},
         f::BaseFunction,
+        scale::AbstractArray{T},
         X::AbstractMatrix{T},
         symmetrize::Bool
-    ) where {T<:AbstractFloat}
+    ) where {T<:Real}
     n = checkdimensions(σ, P, X)
     for j = 1:n
         xj = subvector(σ, X, j)
         for i = 1:j
             xi = subvector(σ, X, i)
-            @inbounds P[i,j] = unsafe_base_evaluate(f, xi, xj)
+            @inbounds P[i,j] = unsafe_base_evaluate(f, scale, xi, xj)
         end
     end
     symmetrize ? LinearAlgebra.copytri!(P, 'U', false) : P
@@ -130,20 +163,58 @@ function basematrix!(
         σ::Orientation,
         P::Matrix{T},
         f::BaseFunction,
+        scale::T,
+        X::AbstractMatrix{T},
+        symmetrize::Bool
+    ) where {T<:Real}
+    n = checkdimensions(σ, P, X)
+    for j = 1:n
+        xj = subvector(σ, X, j)
+        for i = 1:j
+            xi = subvector(σ, X, i)
+            @inbounds P[i,j] = unsafe_base_evaluate(f, scale, xi, xj)
+        end
+    end
+    symmetrize ? LinearAlgebra.copytri!(P, 'U', false) : P
+end
+
+function basematrix!(
+        σ::Orientation,
+        P::Matrix{T},
+        f::BaseFunction,
+        scale::AbstractArray{T},
         X::AbstractMatrix{T},
         Y::AbstractMatrix{T},
-    ) where {T<:AbstractFloat}
+    ) where {T<:Real}
     n, m = checkdimensions(σ, P, X, Y)
     for j = 1:m
         yj = subvector(σ, Y, j)
         for i = 1:n
             xi = subvector(σ, X, i)
-            @inbounds P[i,j] = unsafe_base_evaluate(f, xi, yj)
+            @inbounds P[i,j] = unsafe_base_evaluate(f, scale, xi, yj)
         end
     end
     P
 end
 
+function basematrix!(
+        σ::Orientation,
+        P::Matrix{T},
+        f::BaseFunction,
+        scale::T,
+        X::AbstractMatrix{T},
+        Y::AbstractMatrix{T},
+    ) where {T<:Real}
+    n, m = checkdimensions(σ, P, X, Y)
+    for j = 1:m
+        yj = subvector(σ, Y, j)
+        for i = 1:n
+            xi = subvector(σ, X, i)
+            @inbounds P[i,j] = unsafe_base_evaluate(f, scale, xi, yj)
+        end
+    end
+    P
+end
 
 # ScalarProduct using BLAS/Built-In methods ================================================
 
@@ -174,7 +245,7 @@ function squared_distance!(
         G::Matrix{T},
         xᵀx::Vector{T},
         symmetrize::Bool
-    ) where {T<:AbstractFloat}
+    ) where {T<:Real}
     if !((n = size(G,1)) == size(G,2))
         throw(DimensionMismatch("Gramian matrix must be square."))
     end
@@ -195,7 +266,7 @@ function squared_distance!(
         G::Matrix{T},
         xᵀx::Vector{T},
         yᵀy::Vector{T}
-    ) where {T<:AbstractFloat}
+    ) where {T<:Real}
     n, m = size(G)
     if length(xᵀx) != n
         throw(DimensionMismatch("Length of xᵀx must match rows of G"))
@@ -217,7 +288,7 @@ function fix_negatives!(
         X::Matrix{T},
         symmetrize::Bool,
         ϵ::T=zero(T)
-    ) where {T<:AbstractFloat}
+    ) where {T<:Real}
     if !((n = size(D,1)) == size(D,2))
         throw(DimensionMismatch("Distance matrix must be square."))
     end
@@ -239,7 +310,7 @@ function fix_negatives!(
         X::Matrix{T},
         Y::Matrix{T},
         ϵ::T=zero(T)
-    ) where {T<:AbstractFloat}
+    ) where {T<:Real}
     n, m = size(D)
     for j = 1:m
         yj = subvector(σ, Y, j)

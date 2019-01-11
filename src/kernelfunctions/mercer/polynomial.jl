@@ -20,18 +20,18 @@ julia> PolynomialKernel(2.0f0, 2.0, 2)
 PolynomialKernel{Float64}(2.0,2.0,2)
 ```
 """
-struct PolynomialKernel{T<:AbstractFloat} <: MercerKernel{T}
-    a::T
+struct PolynomialKernel{T<:Real,A} <: MercerKernel{T}
+    a::A
     c::T
     d::T
     function PolynomialKernel{T}(
-            a::Real=T(1),
-            c::Real=T(1),
-            d::Real=T(3)
-        ) where {T<:AbstractFloat}
-        @check_args(PolynomialKernel, a, a >  zero(a), "a > 0")
-        @check_args(PolynomialKernel, c, c >= zero(c), "c ≧ 0")
-        @check_args(PolynomialKernel, d, d >= one(d) && d == trunc(d), "d ∈ ℤ₊")
+            a::Union{T,AbstractVector{T}}=T(1),
+            c::T=T(1),
+            d::T=T(3)
+        ) where {T<:Real}
+        @check_args(PolynomialKernel, a, count(a .<=  zero(T)) == 0, "a > 0")
+        @check_args(PolynomialKernel, c, c >= zero(T), "c ≧ 0")
+        @check_args(PolynomialKernel, d, d >= one(T) && d == trunc(d), "d ∈ ℤ₊")
         return new{T}(a, c, d)
     end
 end
@@ -48,7 +48,7 @@ end
 @inline basefunction(::PolynomialKernel) = ScalarProduct()
 
 @inline function kappa(κ::PolynomialKernel{T}, xᵀy::T) where {T}
-    return (κ.a*xᵀy + κ.c)^(κ.d)
+    return (xᵀy + κ.c)^(κ.d)
 end
 
 function convert(::Type{K}, κ::PolynomialKernel) where {K>:PolynomialKernel{T}} where T

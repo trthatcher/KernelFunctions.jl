@@ -1,5 +1,5 @@
 # Abstract Rational-Quadratic Kernel =======================================================
-abstract type AbstractRationalQuadraticKernel{T<:AbstractFloat} <: MercerKernel{T} end
+abstract type AbstractRationalQuadraticKernel{T<:Real <: MercerKernel{T} end
 
 @inline basefunction(::AbstractRationalQuadraticKernel) = SquaredEuclidean()
 
@@ -30,16 +30,16 @@ julia> RationalQuadraticKernel(2.0f0, 2.0)
 RationalQuadraticKernel{Float64}(2.0,2.0)
 ```
 """
-struct RationalQuadraticKernel{T<:AbstractFloat} <: AbstractRationalQuadraticKernel{T}
-    α::T
+struct RationalQuadraticKernel{T<:Real} <: AbstractRationalQuadraticKernel{T}
+    α::A
     β::T
     function RationalQuadraticKernel{T}(
-            α::Real=T(1),
-            β::Real=T(1)
-        ) where {T<:AbstractFloat}
-        @check_args(RationalQuadraticKernel, α, α > zero(T), "α > 0")
+            α::Union{T,AbstractVector{T}}=T(1),
+            β::T=T(1)
+        ) where {T<:Real}
+        @check_args(RationalQuadraticKernel, α, count(α .<= zero(T))==0, "α > 0")
         @check_args(RationalQuadraticKernel, β, β > zero(T), "β > 0")
-        return new{T}(α, β)
+        return new{T,typeof(α)}(α, β)
     end
 end
 function RationalQuadraticKernel(
@@ -50,7 +50,7 @@ function RationalQuadraticKernel(
 end
 
 @inline function kappa(κ::RationalQuadraticKernel{T}, d²::T) where {T}
-    return (one(T) + κ.α*d²)^(-κ.β)
+    return (one(T) + d²)^(-κ.β)
 end
 
 function convert(
@@ -90,7 +90,7 @@ julia> GammaRationalQuadraticKernel(2.0f0, 2.0f0, 0.5f0)
 GammaRationalQuadraticKernel{Float32}(2.0,2.0,0.5)
 ```
 """
-struct GammaRationalQuadraticKernel{T<:AbstractFloat} <: AbstractRationalQuadraticKernel{T}
+struct GammaRationalQuadraticKernel{T<:Real} <: AbstractRationalQuadraticKernel{T}
     α::T
     β::T
     γ::T
@@ -98,7 +98,7 @@ struct GammaRationalQuadraticKernel{T<:AbstractFloat} <: AbstractRationalQuadrat
             α::Real=T(1),
             β::Real=T(1),
             γ::Real=T(1)
-        ) where {T<:AbstractFloat}
+        ) where {T<:Real}
         @check_args(GammaRationalQuadraticKernel, α, α > zero(T), "α > 0")
         @check_args(GammaRationalQuadraticKernel, β, β > zero(T), "β > 0")
         @check_args(GammaRationalQuadraticKernel, γ, one(T) >= γ > zero(T), "γ ∈ (0,1]")

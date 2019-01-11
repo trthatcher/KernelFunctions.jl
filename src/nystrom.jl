@@ -8,7 +8,7 @@ for orientation in (:row, :col)
                 σ::Val{$(Meta.quot(orientation))},
                 X::Matrix,
                 r::T
-            ) where {T<:AbstractFloat}
+            ) where {T<:Real}
             0 < r <= 1 || error("Sample rate must be in range (0,1]")
             n = size(X, $dim)
             s = max(Int64(trunc(n*r)),1)
@@ -21,7 +21,7 @@ for orientation in (:row, :col)
                 κ::Kernel{T},
                 X::Matrix{T},
                 S::Vector{U}
-            ) where {T<:AbstractFloat,U<:Integer}
+            ) where {T<:Real,U<:Integer}
             Xs = getindex(X, $S, $fulldim)
             C = kernelmatrix(σ, κ, Xs, X)   # kernel matrix of X and sampled X
             Cs = getindex(C, :, S)  # purely sampled component of C

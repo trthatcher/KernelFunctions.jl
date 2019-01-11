@@ -21,13 +21,13 @@ julia> LogKernel(0.5, 0.5)
 LogKernel{Float64}(0.5,0.5)
 ```
 """
-struct LogKernel{T<:AbstractFloat} <: NegativeDefiniteKernel{T}
-    α::T
+struct LogKernel{T<:Real,A} <: NegativeDefiniteKernel{T}
+    α::A
     γ::T
-    function LogKernel{T}(α::Real=T(1), γ::Real=T(1)) where {T<:AbstractFloat}
-        @check_args(LogKernel, α, α > zero(T), "α > 0")
+    function LogKernel{T}(α::Union{T,AbstractVector{T}}=T(1), γ::T=T(1)) where {T<:Real}
+        @check_args(LogKernel, α, count(α .<= zero(T))==0, "α > 0")
         @check_args(LogKernel, γ, one(T) >= γ > zero(T), "γ ∈ (0,1]")
-        return new{T}(α, γ)
+        return new{T,typeof(α)}(α.^(-γ), γ)
     end
 end
 function LogKernel(α::T₁=1.0, γ::T₂=T₁(1)) where {T₁<:Real,T₂<:Real}
@@ -36,7 +36,7 @@ end
 
 @inline basefunction(::LogKernel) = SquaredEuclidean()
 
-@inline kappa(κ::LogKernel{T}, d²::T) where {T} = log(one(T) + κ.α*d²^(κ.γ))
+@inline kappa(κ::LogKernel{T}, d²::T) where {T} = log(one(T) + d²^(κ.γ))
 
 function convert(::Type{K}, κ::LogKernel) where {K>:LogKernel{T}} where T
     return LogKernel{T}(κ.α, κ.γ)

@@ -21,18 +21,18 @@ julia> ExponentiatedKernel(2.0f0)
 ExponentiatedKernel{Float32}(2.0)
 ```
 """
-struct ExponentiatedKernel{T<:AbstractFloat} <: MercerKernel{T}
-    α::T
-    function ExponentiatedKernel{T}(α::Real=T(1)) where {T<:AbstractFloat}
-        @check_args(ExponentiatedKernel, α, α > zero(T), "α > 0")
-        return new{T}(α)
+struct ExponentiatedKernel{T<:Real,A} <: MercerKernel{T}
+    α::A
+    function ExponentiatedKernel{T}(α::Union{T,AbstractVector{T}}=1.0) where {T<:Real}
+        @check_args(ExponentiatedKernel, α, count(α .<= zero(T))==0, "α > 0")
+        return new{T,typeof(α)}(α)
     end
 end
-ExponentiatedKernel(α::T=1.0) where {T<:Real} = ExponentiatedKernel{promote_float(T)}(α)
+ExponentiatedKernel(α::T=1.0) where {T<:Real} = ExponentiatedKernel{T}(α)
 
 @inline basefunction(::ExponentiatedKernel) = ScalarProduct()
 
-@inline kappa(κ::ExponentiatedKernel{T}, xᵀy::T) where {T} = exp(κ.α*xᵀy)
+@inline kappa(κ::ExponentiatedKernel{T}, xᵀy::T) where {T} = exp(xᵀy)
 
 function convert(
         ::Type{K},

@@ -1,21 +1,21 @@
 # Kernel Scalar & Vector Operation  ========================================================
 
-function kernel(κ::Kernel{T}, x::T, y::T) where {T<:AbstractFloat}
-    kappa(κ, base_evaluate(basefunction(κ), x, y))
+function kernel(κ::Kernel{T}, x::T, y::T) where {T<:Real}
+    kappa(κ, base_evaluate(basefunction(κ), κ.α, x, y))
 end
 
 function kernel(
         κ::Kernel{T},
         x::AbstractArray{T},
         y::AbstractArray{T}
-    ) where {T<:AbstractFloat}
-    kappa(κ, base_evaluate(basefunction(κ), x, y))
+    ) where {T<:Real}
+    kappa(κ, base_evaluate(basefunction(κ), κ.α, x, y))
 end
 
 
 # Kernel Matrix Calculation ================================================================
 
-function kappamatrix!(κ::Kernel{T}, P::AbstractMatrix{T}) where {T<:AbstractFloat}
+function kappamatrix!(κ::Kernel{T}, P::AbstractMatrix{T}) where {T<:Real}
     for i in eachindex(P)
         @inbounds P[i] = kappa(κ, P[i])
     end
@@ -26,7 +26,7 @@ function symmetric_kappamatrix!(
         κ::Kernel{T},
         P::AbstractMatrix{T},
         symmetrize::Bool
-    ) where {T<:AbstractFloat}
+    ) where {T<:Real}
     if !((n = size(P,1)) == size(P,2))
         throw(DimensionMismatch("Pairwise matrix must be square."))
     end
@@ -48,8 +48,8 @@ function kernelmatrix!(
         κ::Kernel{T},
         X::AbstractMatrix{T},
         symmetrize::Bool
-    ) where {T<:AbstractFloat}
-    basematrix!(σ, K, basefunction(κ), X, false)
+    ) where {T<:Real}
+    basematrix!(σ, K, basefunction(κ), κ.α, X, false)
     symmetric_kappamatrix!(κ, K, symmetrize)
 end
 
@@ -65,8 +65,8 @@ function kernelmatrix!(
         κ::Kernel{T},
         X::AbstractMatrix{T},
         Y::AbstractMatrix{T}
-    ) where {T<:AbstractFloat}
-    basematrix!(σ, K, basefunction(κ), X, Y)
+    ) where {T<:Real}
+    basematrix!(σ, K, basefunction(κ), κ.α, X, Y)
     kappamatrix!(κ, K)
 end
 
@@ -75,9 +75,9 @@ function kernelmatrix(
         κ::Kernel{T},
         X::AbstractMatrix{T},
         symmetrize::Bool = true
-    ) where {T<:AbstractFloat}
+    ) where {T<:Real}
     K = allocate_basematrix(σ, X)
-    symmetric_kappamatrix!(κ, basematrix!(σ, K, basefunction(κ), X, false), symmetrize)
+    symmetric_kappamatrix!(κ, basematrix!(σ, K, basefunction(κ), κ.α, X, false), symmetrize)
 end
 
 function kernelmatrix(
@@ -85,9 +85,9 @@ function kernelmatrix(
         κ::Kernel{T},
         X::AbstractMatrix{T},
         Y::AbstractMatrix{T}
-    ) where {T<:AbstractFloat}
+    ) where {T<:Real}
     K = allocate_basematrix(σ, X, Y)
-    kappamatrix!(κ, basematrix!(σ, K, basefunction(κ), X, Y))
+    kappamatrix!(κ, basematrix!(σ, K, basefunction(κ), κ.α, X, Y))
 end
 
 
@@ -182,7 +182,7 @@ Where ``\mathbf{\mu}_{\phi\mathbf{x}}`` and ``\mathbf{\mu}_{\phi\mathbf{x}}`` ar
 = \frac{1}{m} \sum_{i=1}^m \phi(\mathbf{y}_i)
 ```
 """
-function centerkernelmatrix!(K::Matrix{T}) where {T<:AbstractFloat}
+function centerkernelmatrix!(K::Matrix{T}) where {T<:Real}
     μx = Statistics.mean(K, dims = 2)
     μy = Statistics.mean(K, dims = 1)
     μ  = Statistics.mean(K)
