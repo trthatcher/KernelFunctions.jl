@@ -21,18 +21,18 @@ PolynomialKernel{Float64}(2.0,2.0,2)
 ```
 """
 struct PolynomialKernel{T<:Real,A} <: MercerKernel{T}
-    a::A
+    α::A
     c::T
     d::T
     function PolynomialKernel{T}(
-            a::Union{T,AbstractVector{T}}=T(1),
-            c::T=T(1),
-            d::T=T(3)
+            a::Union{Real,AbstractVector{Real}}=T(1),
+            c::Real=T(1),
+            d::Real=T(3)
         ) where {T<:Real}
         @check_args(PolynomialKernel, a, count(a .<=  zero(T)) == 0, "a > 0")
         @check_args(PolynomialKernel, c, c >= zero(T), "c ≧ 0")
         @check_args(PolynomialKernel, d, d >= one(T) && d == trunc(d), "d ∈ ℤ₊")
-        return new{T,typeof{a}}(a, c, d)
+        return new{T,typeof(a)}(a, c, d)
     end
 end
 
@@ -41,8 +41,7 @@ function PolynomialKernel(
         c::T₂=T₁(1),
         d::T₃=convert(promote_float(T₁,T₂), 3)
     ) where {T₁<:Real,T₂<:Real,T₃<:Real}
-    T = promote_float(T₁,T₂,T₃)
-    return PolynomialKernel{T}(a, c, d)
+    return PolynomialKernel{promote_float(T₁,T₂,T₃)}(a, c, d)
 end
 
 @inline basefunction(::PolynomialKernel) = ScalarProduct()
@@ -51,6 +50,6 @@ end
     return (xᵀy + κ.c)^(κ.d)
 end
 
-function convert(::Type{K}, κ::PolynomialKernel) where {K>:PolynomialKernel{T}} where T
-    return PolynomialKernel{T}(κ.a, κ.c, κ.d)
+function convert(::Type{K}, κ::PolynomialKernel) where {K>:PolynomialKernel{T,A} where A} where T
+    return PolynomialKernel{T}(T.(κ.α), T(κ.c), T(κ.d))
 end

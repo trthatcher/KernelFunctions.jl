@@ -20,9 +20,9 @@ SigmoidKernel{Float64}(0.5,0.5)
 ```
 """
 struct SigmoidKernel{T<:Real,A} <: Kernel{T}
-    a::A
+    α::A
     c::T
-    function SigmoidKernel{T}(a::Union{T,AbstractVector{T}}=T(1), c::T=T(1)) where {T<:Real}
+    function SigmoidKernel{T}(a::Union{Real,AbstractVector{Real}}=T(1), c::Real=T(1)) where {T<:Real}
         @check_args(SigmoidKernel, a, count(a .<=  zero(T))==0, "a > 0")
         @check_args(SigmoidKernel, c, c >= zero(T), "c ≧ 0")
         return new{T,typeof(a)}(a, c)
@@ -34,6 +34,6 @@ SigmoidKernel(a::Union{T₁,AbstractVector{T₁}}=1.0, c::T₂=T₁(1)) where {T
 
 @inline kappa(κ::SigmoidKernel{T}, xᵀy::T) where {T} = tanh(xᵀy + κ.c)
 
-function convert(::Type{K}, κ::SigmoidKernel) where {K>:SigmoidKernel{T}} where T
-    return SigmoidKernel{T}(κ.a, κ.c)
+function convert(::Type{K}, κ::SigmoidKernel) where {K>:SigmoidKernel{T,A} where A} where T
+    return SigmoidKernel{T}(T.(κ.α), T(κ.c))
 end

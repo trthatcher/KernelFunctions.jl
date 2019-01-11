@@ -30,7 +30,7 @@ ExponentialKernel{Float32}(2.0)
 """
 struct ExponentialKernel{T<:Real,A} <: AbstractExponentialKernel{T}
     α::A
-    function ExponentialKernel{T}(α::Union{T,AbstractVector{T}}=1.0) where {T<:Real}
+    function ExponentialKernel{T}(α::Union{Real,AbstractVector{Real}}=T(1)) where {T<:Real}
         @check_args(ExponentialKernel, α, count(α .<= zero(T)) == 0, "α > 0")
         return new{T,typeof(α)}(α.^2)
     end
@@ -40,8 +40,8 @@ ExponentialKernel(α::Union{T,AbstractVector{T}}=1.0) where {T<:Real} = Exponent
 
 @inline kappa(κ::ExponentialKernel{T}, d²::T) where {T} = exp(-√(d²))
 
-function convert(::Type{K}, κ::ExponentialKernel) where {K>:ExponentialKernel{T}} where T
-    return ExponentialKernel{T}(κ.α)
+function Base.convert(::Type{K}, κ::ExponentialKernel) where {K>:ExponentialKernel{T,A} where A} where T
+    return ExponentialKernel{T}(T.(sqrt.(κ.α)))
 end
 
 """
@@ -77,21 +77,24 @@ SquaredExponentialKernel{Float32}(2.0)
 """
 struct SquaredExponentialKernel{T<:Real,A} <: AbstractExponentialKernel{T}
     α::A
-    function SquaredExponentialKernel{T}(α::Union{T,AbstractVector{T}}=T(1)) where {T<:Real}
+    function SquaredExponentialKernel{T}(α::Union{Real,AbstractVector{Real}}=T(1)) where {T<:Real}
         @check_args(SquaredExponentialKernel, α, count(α .<= zero(T))==0, "α > 0")
         return new{T,typeof(α)}(α)
     end
 end
 
-SquaredExponentialKernel(α::Union{T,AbstractVector{T}}=1.0) where {T<:Real} = SquaredExponentialKernel{promote_float{T}}(α)
+function SquaredExponentialKernel(α::Union{T,AbstractVector{T}}=1.0) where {T<:Real}
+    SquaredExponentialKernel{T}(α)
+    # SquaredExponentialKernel{promote_float(T)}(α)
+end
 
 @inline kappa(κ::SquaredExponentialKernel{T}, d²::T) where {T} = exp(-d²)
 
 function convert(
         ::Type{K},
         κ::SquaredExponentialKernel
-    ) where {K>:SquaredExponentialKernel{T}} where T
-    return SquaredExponentialKernel{T}(κ.α)
+    ) where {K>:SquaredExponentialKernel{T,A} where A} where T
+    return SquaredExponentialKernel{T}(T.(κ.α))
 end
 
 """
@@ -138,7 +141,7 @@ GammaExponentialKernel{Float64}(2.0,0.5)
 struct GammaExponentialKernel{T<:Real,A} <: AbstractExponentialKernel{T}
     α::A
     γ::T
-    function GammaExponentialKernel{T}(α::Union{T,AbstractVector{T}}=T(1), γ::T=T(1)) where {T<:Real}
+    function GammaExponentialKernel{T}(α::Union{Real,AbstractVector{Real}}=T(1), γ::Real=T(1)) where {T<:Real}
         @check_args(GammaExponentialKernel, α, count(α .<= zero(T))==0, "α > 0")
         @check_args(GammaExponentialKernel, γ, one(T) >= γ > zero(T), "γ ∈ (0,1]")
         return new{T,typeof(α)}(α.^(-γ), γ)
@@ -154,6 +157,6 @@ end
 function convert(
         ::Type{K},
         κ::GammaExponentialKernel
-    ) where {K>:GammaExponentialKernel{T}} where T
-    return GammaExponentialKernel{T}(κ.α, κ.γ)
+    ) where {K>:GammaExponentialKernel{T,A} where A} where T
+    return GammaExponentialKernel{T}(T.(κ.α.^(κ.γ)), T.(κ.γ))
 end

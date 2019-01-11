@@ -66,7 +66,7 @@ function base_evaluate(
         x::AbstractArray{T},
         y::AbstractArray{T}
     ) where {T<:Real}
-    if (n = length(x)) != length(y) || n != length(scale)
+    if (n = length(x)) != length(y)
         throw(DimensionMismatch("Arrays x and y must have the same length."))
     elseif n == 0
         throw(DimensionMismatch("Arrays x and y must be at least of length 1."))

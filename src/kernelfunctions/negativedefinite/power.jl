@@ -17,11 +17,12 @@ julia> PowerKernel(0.5f0)
 PowerKernel{Float32}(0.5)
 ```
 """
-struct PowerKernel{T<:Real} <: NegativeDefiniteKernel{T}
+struct PowerKernel{T<:Real,A} <: NegativeDefiniteKernel{T}
     γ::T
+    α::A
     function PowerKernel{T}(γ::Real=T(1)) where {T<:Real}
         @check_args(PowerKernel, γ, one(T) >= γ > zero(T), "γ ∈ (0,1]")
-        new{T}(γ)
+        new{T,T}(γ,one(T))
     end
 end
 PowerKernel(γ::T=1.0) where {T<:Real} = PowerKernel{promote_float(T)}(γ)
@@ -30,6 +31,6 @@ PowerKernel(γ::T=1.0) where {T<:Real} = PowerKernel{promote_float(T)}(γ)
 
 @inline kappa(κ::PowerKernel{T}, d²::T) where {T} = d²^κ.γ
 
-function convert(::Type{K}, κ::PowerKernel) where {K>:PowerKernel{T}} where T
-    return PowerKernel{T}(κ.γ)
+function convert(::Type{K}, κ::PowerKernel) where {K>:PowerKernel{T,A} where A} where T
+    return PowerKernel{T}(T(κ.γ))
 end
