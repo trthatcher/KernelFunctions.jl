@@ -23,7 +23,7 @@ ExponentiatedKernel{Float32}(2.0)
 """
 struct ExponentiatedKernel{T<:Real,A} <: MercerKernel{T}
     α::A
-    function ExponentiatedKernel{T}(α::Union{Real,AbstractVector{Real}}=1.0) where {T<:Real}
+    function ExponentiatedKernel{T}(α::Union{Real,AbstractVector{<:Real}}=1.0) where {T<:Real}
         @check_args(ExponentiatedKernel, α, count(α .<= zero(T))==0, "α > 0")
         return new{T,typeof(α)}(α)
     end

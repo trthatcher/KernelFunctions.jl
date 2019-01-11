@@ -34,7 +34,7 @@ struct RationalQuadraticKernel{T<:Real,A} <: AbstractRationalQuadraticKernel{T}
     α::A
     β::T
     function RationalQuadraticKernel{T}(
-            α::Union{Real,AbstractVector{Real}}=T(1),
+            α::Union{Real,AbstractVector{<:Real}}=T(1),
             β::Real=T(1)
         ) where {T<:Real}
         @check_args(RationalQuadraticKernel, α, count(α .<= zero(T))==0, "α > 0")
@@ -95,7 +95,7 @@ struct GammaRationalQuadraticKernel{T<:Real,A} <: AbstractRationalQuadraticKerne
     β::T
     γ::T
     function GammaRationalQuadraticKernel{T}(
-            α::Union{Real,AbstractVector{Real}}=T(1),
+            α::Union{Real,AbstractVector{<:Real}}=T(1),
             β::Real=T(1),
             γ::Real=T(1)
         ) where {T<:Real}

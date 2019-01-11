@@ -24,7 +24,7 @@ LogKernel{Float64}(0.5,0.5)
 struct LogKernel{T<:Real,A} <: NegativeDefiniteKernel{T}
     α::A
     γ::T
-    function LogKernel{T}(α::Union{Real,AbstractVector{Real}}=T(1), γ::Real=T(1)) where {T<:Real}
+    function LogKernel{T}(α::Union{Real,AbstractVector{<:Real}}=T(1), γ::Real=T(1)) where {T<:Real}
         @check_args(LogKernel, α, count(α .<= zero(T))==0, "α > 0")
         @check_args(LogKernel, γ, one(T) >= γ > zero(T), "γ ∈ (0,1]")
         return new{T,typeof(α)}(α.^(-γ), γ)

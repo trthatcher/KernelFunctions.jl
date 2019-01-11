@@ -22,7 +22,7 @@ SigmoidKernel{Float64}(0.5,0.5)
 struct SigmoidKernel{T<:Real,A} <: Kernel{T}
     α::A
     c::T
-    function SigmoidKernel{T}(a::Union{Real,AbstractVector{Real}}=T(1), c::Real=T(1)) where {T<:Real}
+    function SigmoidKernel{T}(a::Union{Real,AbstractVector{<:Real}}=T(1), c::Real=T(1)) where {T<:Real}
         @check_args(SigmoidKernel, a, count(a .<=  zero(T))==0, "a > 0")
         @check_args(SigmoidKernel, c, c >= zero(T), "c ≧ 0")
         return new{T,typeof(a)}(a, c)

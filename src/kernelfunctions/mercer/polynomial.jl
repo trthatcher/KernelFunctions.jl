@@ -25,7 +25,7 @@ struct PolynomialKernel{T<:Real,A} <: MercerKernel{T}
     c::T
     d::T
     function PolynomialKernel{T}(
-            a::Union{Real,AbstractVector{Real}}=T(1),
+            a::Union{Real,AbstractVector{<:Real}}=T(1),
             c::Real=T(1),
             d::Real=T(3)
         ) where {T<:Real}
