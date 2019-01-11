@@ -5,20 +5,20 @@ p = 5
 @testset "Testing $(MLK.unsafe_base_evaluate)" begin
     for f in base_functions
         F = (f)()
-        f_agg_tmp = get(base_functions_aggregate, f, (s,x,y) -> NaN)
+        f_agg_tmp = get(base_functions_aggregate, f, (s,scale,x,y) -> NaN)
         f_ret_tmp = get(base_functions_return, f, s -> s)
 
         for T in FloatingPointTypes
             x = rand(T,p)
             y = rand(T,p)
-
+            scale = rand(T,p)
             s = zero(T)
             for i = 1:p
-                s = f_agg_tmp(s, x[i], y[i])
+                s = f_agg_tmp(s, scale[i], x[i], y[i])
             end
             s = f_ret_tmp(s)
 
-            @test isapprox(s, MLK.unsafe_base_evaluate(F, x, y))
+            @test isapprox(s, MLK.unsafe_base_evaluate(F, scale, x, y))
         end
     end
 end
@@ -29,15 +29,18 @@ end
 
         for T in FloatingPointTypes
             v = rand(T,p+1)
+            scale = rand(T,p)
+            scale_f = rand(T,p+1)
             x = rand(T,p)
             y = rand(T,p)
 
-            @test isapprox(MLK.base_evaluate(F, x, y),       MLK.unsafe_base_evaluate(F, x, y))
-            @test isapprox(MLK.base_evaluate(F, x[1], y[1]), MLK.unsafe_base_evaluate(F, x[1:1], y[1:1]))
+            @test isapprox(MLK.base_evaluate(F, scale, x, y),       MLK.unsafe_base_evaluate(F, scale, x, y))
+            @test isapprox(MLK.base_evaluate(F, scale[1], x[1], y[1]), MLK.unsafe_base_evaluate(F, scale[1:1], x[1:1], y[1:1]))
 
-            @test_throws DimensionMismatch MLK.base_evaluate(F, x, v)
-            @test_throws DimensionMismatch MLK.base_evaluate(F, v, x)
-            @test_throws DimensionMismatch MLK.base_evaluate(F, T[], T[])
+            @test_throws DimensionMismatch MLK.base_evaluate(F, scale, x, v)
+            @test_throws DimensionMismatch MLK.base_evaluate(F, scale, v, x)
+            @test_throws DimensionMismatch MLK.base_evaluate(F, scale_f, x, y)
+            @test_throws DimensionMismatch MLK.base_evaluate(F, scale, T[], T[])
         end
     end
 end
@@ -113,6 +116,7 @@ end
     for T in (Float32, Float64)
         X_set = [rand(T,p) for i = 1:n]
         Y_set = [rand(T,p) for i = 1:m]
+        scale = rand(T,p)
 
         P_tst_nn = Array{T}(undef, n, n)
         P_tst_nm = Array{T}(undef, n, m)
@@ -133,11 +137,11 @@ end
                 X = layout == Val(:row) ? permutedims(hcat(X_set...)) : hcat(X_set...)
                 Y = layout == Val(:row) ? permutedims(hcat(Y_set...)) : hcat(Y_set...)
 
-                P = [MLK.base_evaluate(F,x,y) for x in X_set, y in X_set]
-                @test isapprox(P, MLK.basematrix!(layout, P_tst_nn, F, X, true))
+                P = [MLK.base_evaluate(F,scale,x,y) for x in X_set, y in X_set]
+                @test isapprox(P, MLK.basematrix!(layout, P_tst_nn, F, scale, X, true))
 
-                P = [MLK.base_evaluate(F,x,y) for x in X_set, y in Y_set]
-                @test isapprox(P, MLK.basematrix!(layout, P_tst_nm, F, X, Y))
+                P = [MLK.base_evaluate(F,scale,x,y) for x in X_set, y in Y_set]
+                @test isapprox(P, MLK.basematrix!(layout, P_tst_nm, F, scale, X, Y))
             end
         end
     end
@@ -157,8 +161,9 @@ end
         F = SquaredEuclidean()
         X = layout == Val(:row) ? permutedims(hcat(v1, v2)) : hcat(v1, v2)
         Y = layout == Val(:row) ? permutedims(hcat(v1, v2, v3)) : hcat(v1, v2, v3)
+        scale = ones(Float64,3)
 
-        @test all(MLK.basematrix!(layout, Array{Float64}(undef, 2,2), F, X, true) .>= 0.0)
-        @test all(MLK.basematrix!(layout, Array{Float64}(undef, 2,3), F, X, Y) .>= 0.0)
+        @test all(MLK.basematrix!(layout, Array{Float64}(undef, 2,2), F, scale, X, true) .>= 0.0)
+        @test all(MLK.basematrix!(layout, Array{Float64}(undef, 2,3), F, scale, X, Y) .>= 0.0)
     end
 end

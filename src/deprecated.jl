@@ -9,9 +9,9 @@ struct SineSquared <: PreMetric end
 @inline base_aggregate(::SineSquared, s::T, x::T, y::T) where {T} = s + sin(x-y)^2
 @inline isstationary(::SineSquared) = true
 
-struct PeriodicKernel{T<:AbstractFloat} <: MercerKernel{T}
+struct PeriodicKernel{T<:Real} <: MercerKernel{T}
     α::T
-    function PeriodicKernel{T}(α::Real) where {T<:AbstractFloat}
+    function PeriodicKernel{T}(α::Real) where {T<:Real}
         Base.depwarn("PeriodicKernel will be removed in the next major release", :PeriodicKernel)
         @check_args(PeriodicKernel, α, α > zero(α), "α > 0")
         new{T}(α)

@@ -29,7 +29,7 @@ function promote_float(Tₖ::DataType...)
         return Float64
     end
     T = promote_type(Tₖ...)
-    return T <: AbstractFloat ? T : Float64
+    return T <: Real ? T : Float64
 end
 
 

@@ -6,6 +6,7 @@ p = 5
     for T in (Float32, Float64)
         x = rand(T,p)
         y = rand(T,p)
+        scale = one(T)
 
         x_alt = rand(T == Float32 ? Float64 : Float32, p)
 
@@ -13,8 +14,8 @@ p = 5
             P = (get(kernel_functions_base, f, SquaredEuclidean))()
             F = convert(f{T}, (f)())
 
-            @test isapprox(MLK.kernel(F, x[1], y[1]), MLK.kappa(F, MLK.base_evaluate(P, x[1], y[1])))
-            @test isapprox(MLK.kernel(F, x, y),       MLK.kappa(F, MLK.base_evaluate(P, x, y)))
+            @test isapprox(MLK.kernel(F, x[1], y[1]), MLK.kappa(F, MLK.base_evaluate(P, scale, x[1], y[1])))
+            @test isapprox(MLK.kernel(F, x, y),       MLK.kappa(F, MLK.base_evaluate(P, scale, x, y)))
 
             z = MLK.kernel(F, x_alt[1], y[1])
             @test typeof(z) == T

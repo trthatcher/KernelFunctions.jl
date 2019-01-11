@@ -20,37 +20,36 @@ julia> PolynomialKernel(2.0f0, 2.0, 2)
 PolynomialKernel{Float64}(2.0,2.0,2)
 ```
 """
-struct PolynomialKernel{T<:AbstractFloat} <: MercerKernel{T}
-    a::T
+struct PolynomialKernel{T<:Real,A} <: MercerKernel{T}
+    α::A
     c::T
     d::T
     function PolynomialKernel{T}(
-            a::Real=T(1),
+            a::Union{Real,AbstractVector{<:Real}}=T(1),
             c::Real=T(1),
             d::Real=T(3)
-        ) where {T<:AbstractFloat}
-        @check_args(PolynomialKernel, a, a >  zero(a), "a > 0")
-        @check_args(PolynomialKernel, c, c >= zero(c), "c ≧ 0")
-        @check_args(PolynomialKernel, d, d >= one(d) && d == trunc(d), "d ∈ ℤ₊")
-        return new{T}(a, c, d)
+        ) where {T<:Real}
+        @check_args(PolynomialKernel, a, count(a .<=  zero(T)) == 0, "a > 0")
+        @check_args(PolynomialKernel, c, c >= zero(T), "c ≧ 0")
+        @check_args(PolynomialKernel, d, d >= one(T) && d == trunc(d), "d ∈ ℤ₊")
+        return new{T,typeof(a)}(a, c, d)
     end
 end
 
 function PolynomialKernel(
-        a::T₁=1.0,
+        a::Union{T₁,AbstractVector{T₁}}=1.0,
         c::T₂=T₁(1),
         d::T₃=convert(promote_float(T₁,T₂), 3)
     ) where {T₁<:Real,T₂<:Real,T₃<:Real}
-    T = promote_float(T₁,T₂,T₃)
-    return PolynomialKernel{T}(a, c, d)
+    return PolynomialKernel{promote_float(T₁,T₂,T₃)}(a, c, d)
 end
 
 @inline basefunction(::PolynomialKernel) = ScalarProduct()
 
 @inline function kappa(κ::PolynomialKernel{T}, xᵀy::T) where {T}
-    return (κ.a*xᵀy + κ.c)^(κ.d)
+    return (xᵀy + κ.c)^(κ.d)
 end
 
-function convert(::Type{K}, κ::PolynomialKernel) where {K>:PolynomialKernel{T}} where T
-    return PolynomialKernel{T}(κ.a, κ.c, κ.d)
+function convert(::Type{K}, κ::PolynomialKernel) where {K>:PolynomialKernel{T,A} where A} where T
+    return PolynomialKernel{T}(T.(κ.α), T(κ.c), T(κ.d))
 end
