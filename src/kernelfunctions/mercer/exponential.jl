@@ -78,7 +78,7 @@ SquaredExponentialKernel{Float32}(2.0)
 struct SquaredExponentialKernel{T<:Real,A} <: AbstractExponentialKernel{T}
     α::A
     function SquaredExponentialKernel{T}(α::Union{Real,AbstractVector{<:Real}}=T(1)) where {T<:Real}
-        @check_args(SquaredExponentialKernel, α, count(α .<= zero(T))==0, "α > 0")
+        @check_args(SquaredExponentialKernel, α, all(α .> zero(T)), "α > 0")
         return new{T,typeof(α)}(α)
     end
 end
@@ -93,7 +93,7 @@ end
 function convert(
         ::Type{K},
         κ::SquaredExponentialKernel
-    ) where {K>:SquaredExponentialKernel{T,A} where A} where T
+    ) where {K>:SquaredExponentialKernel{T,A} where {T,A}}
     return SquaredExponentialKernel{T}(T.(κ.α))
 end
 
